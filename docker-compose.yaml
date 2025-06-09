@@ -1,0 +1,16 @@
+services:
+  mara-n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    volumes: 
+      - ./:/home/node/.n8n
+    environment:
+      GENERIC_TIMEZONE: America/Sao_Paulo
+    restart: unless-stopped
+    networks:
+      - mara-n8n-network
+
+networks:
+  mara-n8n-network:
+    driver: bridge
