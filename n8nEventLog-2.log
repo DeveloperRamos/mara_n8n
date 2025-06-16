@@ -1,0 +1,2 @@
+{"__type":"$$EventMessageAudit","id":"9c72468c-6d91-48b5-a691-543888d9dffe","ts":"2025-06-13T21:50:33.691+00:00","eventName":"n8n.audit.workflow.archived","message":"n8n.audit.workflow.archived","payload":{"userId":"af19d27e-1e83-4686-b728-8e69cd1b6bd4","_email":"marcio.ramos.almeida@outlook.com.br","_firstName":"Marcio","_lastName":"Almeida","globalRole":"global:owner","workflowId":"Agrob0zxvAstpgz8"}}
+{"__type":"$$EventMessageConfirm","confirm":"9c72468c-6d91-48b5-a691-543888d9dffe","ts":"2025-06-13T21:50:33.696+00:00","source":{"id":"0","name":"eventBus"}}
