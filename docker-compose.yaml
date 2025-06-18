@@ -3,14 +3,97 @@ services:
     image: n8nio/n8n:next
     ports:
       - "5678:5678"
-    volumes: 
-      - ./:/home/node/.n8n
+    volumes:
+      - ./n8n_data:/home/node/.n8n
     environment:
       GENERIC_TIMEZONE: America/Sao_Paulo
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_RUNNERS_ENABLED: true
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: mara_n8n_user
+      DB_POSTGRESDB_PASSWORD: mara_n8n_pass
+      QUEUE_MODE: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - mara-n8n-network
+
+  postgres:
+    image: postgres:15.13
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mara_n8n_user
+      POSTGRES_PASSWORD: mara_n8n_pass
+      POSTGRES_DB: n8n
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mara-n8n-network
+
+  redis:
+    image: redis:8.0.2
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - mara-n8n-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - mara-n8n-network
+
+  pg-backup:
+    image: alpine:latest
+    container_name: pg-backup
+    volumes:
+      - ./pg-backup:/backup-scripts
+      - ./pg-backup/msmtprc:/etc/msmtprc:ro
+      - postgres_backups:/var/backups
+      - pg-backup-logs:/var/log/backup
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: mara_n8n_user
+      POSTGRES_PASSWORD: mara_n8n_pass
+      POSTGRES_DB: n8n
+      SMTP_TO: ${SMTP_TO}
+      SMTP_FROM: ${SMTP_FROM}
+    entrypoint: >
+      /bin/sh -c "
+        apk add --no-cache bash tar msmtp mailx &&
+        ln -sf /usr/bin/msmtp /usr/sbin/sendmail &&
+        while true; do
+          /backup-scripts/backup.sh >> /var/log/backup/last.log 2>&1;
+          sleep 86400;
+        done"
     networks:
       - mara-n8n-network
 
 networks:
   mara-n8n-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  n8n_data:
+  postgres_backups:
+  pg-backup-logs:
+  pgadmin_data:
